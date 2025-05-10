@@ -152,7 +152,7 @@ except FileNotFoundError:
 except Exception as e:
     raise RuntimeError(f"Error loading model: {str(e)}")
 
-# Routes (ONLY UPDATED REGISTRATION/LOGIN TO FIX ISSUES)
+# Routes 
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -166,17 +166,23 @@ def register():
     form = RegistrationForm()
     if form.validate_on_submit():
         try:
-            # Only added duplicate check - rest is original
+            # duplicates check
             if User.query.filter_by(username=form.username.data).first():
                 flash('Username already exists', 'danger')
                 return redirect(url_for('register'))
-                
+
             if User.query.filter_by(email=form.email.data).first():
                 flash('Email already exists', 'danger')
                 return redirect(url_for('register'))
 
-            # YOUR ORIGINAL REGISTRATION CODE
-            hashed_password = generate_password_hash(form.password.data, method='sha256')
+            # ---- 1️⃣  create the hash (nothing else likely to fail here) ----
+            hashed_password = generate_password_hash(
+                form.password.data,
+                method='pbkdf2:sha256',
+                salt_length=16
+            )
+
+            # ---- 2️⃣  create the user only after the hash succeeds ----
             new_user = User(
                 username=form.username.data,
                 email=form.email.data,
@@ -184,12 +190,17 @@ def register():
             )
             db.session.add(new_user)
             db.session.commit()
+
             flash('Registration successful! Please log in.', 'success')
             return redirect(url_for('login'))
+
+        # -------- except block: reference the exception, not new_user -------
         except Exception as e:
             db.session.rollback()
-            flash(f'Registration failed: {e}', 'danger')  # Added error details
+            app.logger.error(f"Registration error: {e}")
+            flash(f'Registration failed: {e}', 'danger')
     return render_template('register.html', form=form)
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
