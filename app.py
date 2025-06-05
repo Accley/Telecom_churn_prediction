@@ -23,18 +23,15 @@ import config
 app = Flask(__name__)
 app.config.from_object(config.Config)
 
-# Ensure the database directory exists
+# Database setup
 db_dir = os.path.join(os.path.dirname(__file__), 'database')
 os.makedirs(db_dir, exist_ok=True)
-
-# Update the SQLALCHEMY_DATABASE_URI to use absolute path
-app.config['SQLALCHEMY_DATABASE_URI'] = f"sqlite:///{os.path.join(db_dir, 'app.db')}"
-
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///' + os.path.join(db_dir, 'app.db'))
 db = SQLAlchemy(app)
 login_manager = LoginManager(app)
 login_manager.login_view = 'login'
 
-# Database Models (EXACTLY AS YOUR ORIGINAL)
+# Database Models
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(50), unique=True, nullable=False)
@@ -67,8 +64,9 @@ class Prediction(db.Model):
     prediction = db.Column(db.String(10))
     probability = db.Column(db.Float)
     timestamp = db.Column(db.DateTime, default=datetime.utcnow)
+    report_generated = db.Column(db.Boolean, default=False)
 
-# Forms (EXACTLY AS YOUR ORIGINAL)
+# Forms
 class RegistrationForm(FlaskForm):
     username = StringField('Username', [validators.Length(min=4, max=25)])
     email = StringField('Email Address', [validators.Length(min=6, max=100)])
@@ -86,73 +84,147 @@ class PredictionForm(FlaskForm):
     telecom_company = SelectField('Telecom Company', choices=[
         ('Airtel', 'Airtel'), 
         ('Tigo', 'Tigo'), 
-        ('Vodacom', 'Vodacom'), 
-        ('Halotel', 'Halotel')
-    ])
+        ('Vodacom', 'Vodacom'),
+        ('Halotel', 'Halotel'),
+        ('TTCL', 'TTCL'),
+        ('Zantel', 'Zantel'),
+        
+    ], validators=[validators.DataRequired()])
+    
     region = SelectField('Region', choices=[
-        ('Dar es Salaam', 'Dar es Salaam'),
-        ('Mwanza', 'Mwanza'),
         ('Arusha', 'Arusha'),
-        ('Mbeya', 'Mbeya'),
+        ('Dar es Salaam', 'Dar es Salaam'),
         ('Dodoma', 'Dodoma'),
+        ('Geita', 'Geita'),
+        ('Iringa', 'Iringa'),
+        ('Kagera', 'Kagera'),
+        ('Katavi', 'Katavi'),
+        ('Kigoma', 'Kigoma'),
+        ('Kilimanjaro', 'Kilimanjaro'),
+        ('Lindi', 'Lindi'),
+        ('Manyara', 'Manyara'),
+        ('Mara', 'Mara'),
+        ('Mbeya', 'Mbeya'),
+        ('Morogoro', 'Morogoro'),
+        ('Mtwara', 'Mtwara'),
+        ('Mwanza', 'Mwanza'),
+        ('Njombe', 'Njombe'),
+        ('Pemba North', 'Pemba North'),
+        ('Pemba South', 'Pemba South'),
+        ('Pwani', 'Pwani'),
+        ('Rukwa', 'Rukwa'),
+        ('Ruvuma', 'Ruvuma'),
+        ('Shinyanga', 'Shinyanga'),
+        ('Simiyu', 'Simiyu'),
+        ('Singida', 'Singida'),
+        ('Songwe', 'Songwe'),
+        ('Tabora', 'Tabora'),
         ('Tanga', 'Tanga'),
-        ('Zanzibar', 'Zanzibar')
-    ])
-    age = IntegerField('Age', [validators.NumberRange(min=18, max=100)])
-    gender = SelectField('Gender', choices=[('Male', 'Male'), ('Female', 'Female')])
+        ('Unguja North', 'Unguja North'),
+        ('Unguja South', 'Unguja South')
+    ], validators=[validators.DataRequired()])
+    
+    age = IntegerField('Age', [validators.NumberRange(min=18, max=110)])
+    gender = SelectField('Gender', choices=[('Male', 'Male'), ('Female', 'Female')], validators=[validators.DataRequired()])
+    
     contract_type = SelectField('Contract Type', choices=[
         ('Prepaid', 'Prepaid'), 
-        ('Postpaid', 'Postpaid')
-    ])
+        ('Postpaid', 'Postpaid'),
+        ('Hybrid', 'Hybrid')
+    ], validators=[validators.DataRequired()])
+    
     contract_duration = SelectField('Contract Duration', choices=[
         ('1 Month', '1 Month'),
+        ('3 Months', '3 Months'),
         ('6 Months', '6 Months'),
         ('12 Months', '12 Months'),
         ('24 Months', '24 Months')
-    ])
+    ], validators=[validators.DataRequired()])
+    
     tenure_months = IntegerField('Tenure (Months)', [validators.NumberRange(min=1, max=120)])
     monthly_charges = FloatField('Monthly Charges', [validators.NumberRange(min=0)])
     data_usage_gb = FloatField('Data Usage (GB)', [validators.NumberRange(min=0)])
     call_duration_minutes = IntegerField('Call Duration (Minutes)', [validators.NumberRange(min=0)])
     complaints_filed = IntegerField('Complaints Filed', [validators.NumberRange(min=0)])
     customer_support_calls = IntegerField('Customer Support Calls', [validators.NumberRange(min=0)])
+    
     payment_method = SelectField('Payment Method', choices=[
         ('Credit Card', 'Credit Card'),
         ('Bank Transfer', 'Bank Transfer'),
         ('Mobile Money', 'Mobile Money'),
-        ('Cash', 'Cash')
-    ])
+        ('Cash', 'Cash'),
+        ('Voucher', 'Voucher'),
+        ('Other', 'Other')
+    ], validators=[validators.DataRequired()])
+    
     internet_service = SelectField('Internet Service', choices=[
         ('Mobile Data', 'Mobile Data'),
         ('Fiber', 'Fiber'),
         ('DSL', 'DSL'),
-        ('None', 'None')
-    ])
+        ('WiMAX', 'WiMAX'),
+        ('None', 'None'),
+        
+    ], validators=[validators.DataRequired()])
+    
     additional_services = SelectField('Additional Services', choices=[
         ('Streaming', 'Streaming'),
         ('VPN', 'VPN'),
         ('Cloud Storage', 'Cloud Storage'),
-        ('None', 'None')
-    ])
+        ('Gaming', 'Gaming'),
+        ('None', 'None'),
+        
+    ], validators=[validators.DataRequired()])
+    
     discount_offer_used = SelectField('Discount Offer Used', choices=[
         ('Yes', 'Yes'),
         ('No', 'No')
-    ])
+    ], validators=[validators.DataRequired()])
+    
     billing_issues_reported = IntegerField('Billing Issues Reported', [validators.NumberRange(min=0)])
 
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
-# Load the trained model (EXACTLY AS YOUR ORIGINAL)
-try:
-    model = joblib.load('models/churn_model.pkl')
-except FileNotFoundError:
-    raise RuntimeError("Model file not found. Please ensure 'models/churn_model.pkl' exists.")
-except Exception as e:
-    raise RuntimeError(f"Error loading model: {str(e)}")
+def load_model():
+    """Load the ML model with robust error handling and fallback"""
+    try:
+        # First try loading the primary model
+        model = joblib.load('models/churn_model.pkl')
+        app.logger.info("Loaded primary churn prediction model")
+        return model
+    except Exception as e:
+        app.logger.error(f"Failed to load primary model: {str(e)}")
+        try:
+            # Try loading backup model
+            model = joblib.load('models/backup_churn_model.pkl')
+            app.logger.warning("Using backup churn prediction model")
+            return model
+        except Exception as e:
+            app.logger.critical(f"Failed to load backup model: {str(e)}")
+            raise RuntimeError("No working model available")
 
-# Routes 
+model = load_model()
+
+# Initialize database
+def initialize_database():
+    with app.app_context():
+        # Create all database tables
+        db.create_all()
+        
+        # Create admin user if not exists
+        if not User.query.filter_by(username='admin').first():
+            admin = User(
+                username='admin',
+                email='admin@example.com',
+                password_hash=generate_password_hash('admin123'),
+                is_admin=True
+            )
+            db.session.add(admin)
+            db.session.commit()
+
+initialize_database()
+
 @app.route('/')
 def index():
     return render_template('index.html')
@@ -166,7 +238,6 @@ def register():
     form = RegistrationForm()
     if form.validate_on_submit():
         try:
-            # duplicates check
             if User.query.filter_by(username=form.username.data).first():
                 flash('Username already exists', 'danger')
                 return redirect(url_for('register'))
@@ -175,14 +246,12 @@ def register():
                 flash('Email already exists', 'danger')
                 return redirect(url_for('register'))
 
-            # ---- 1️⃣  create the hash (nothing else likely to fail here) ----
             hashed_password = generate_password_hash(
                 form.password.data,
                 method='pbkdf2:sha256',
                 salt_length=16
             )
 
-            # ---- 2️⃣  create the user only after the hash succeeds ----
             new_user = User(
                 username=form.username.data,
                 email=form.email.data,
@@ -194,13 +263,11 @@ def register():
             flash('Registration successful! Please log in.', 'success')
             return redirect(url_for('login'))
 
-        # -------- except block: reference the exception, not new_user -------
         except Exception as e:
             db.session.rollback()
             app.logger.error(f"Registration error: {e}")
             flash(f'Registration failed: {e}', 'danger')
     return render_template('register.html', form=form)
-
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -208,7 +275,6 @@ def login():
     if form.validate_on_submit():
         user = User.query.filter_by(username=form.username.data).first()
         
-        # Only added more specific error messages - logic is original
         if not user:
             flash('Username not found', 'danger')
             return redirect(url_for('login'))
@@ -217,25 +283,70 @@ def login():
             flash('Incorrect password', 'danger')
             return redirect(url_for('login'))
 
-        # YOUR ORIGINAL LOGIN CODE
         login_user(user)
         next_page = request.args.get('next')
         return redirect(next_page) if next_page else redirect(url_for('index'))
     return render_template('login.html', form=form)
 
-# ALL OTHER ROUTES REMAIN EXACTLY AS YOUR ORIGINAL
 @app.route('/logout')
 @login_required
 def logout():
     logout_user()
     return redirect(url_for('index'))
 
+def generate_churn_report(prediction):
+    """Generate a comprehensive churn analysis report"""
+    report = {
+        'risk_factors': [],
+        'retention_opportunities': [],
+        'actionable_insights': []
+    }
+    
+    # Risk factors
+    if prediction.probability > 0.7:
+        report['risk_factors'].append("High churn probability (>70%)")
+    elif prediction.probability > 0.5:
+        report['risk_factors'].append("Moderate churn probability (>50%)")
+    
+    if prediction.complaints_filed > 3:
+        report['risk_factors'].append(f"High number of complaints ({prediction.complaints_filed})")
+    
+    if prediction.customer_support_calls > 5:
+        report['risk_factors'].append(f"Frequent support calls ({prediction.customer_support_calls})")
+    
+    if prediction.tenure_months < 6:
+        report['risk_factors'].append("Short customer tenure (less than 6 months)")
+    
+    # Retention opportunities
+    if prediction.contract_type == 'Prepaid':
+        report['retention_opportunities'].append("Offer postpaid conversion with benefits")
+    
+    if prediction.additional_services == 'None':
+        report['retention_opportunities'].append("Recommend value-added services")
+    
+    if prediction.discount_offer_used == 'No':
+        report['retention_opportunities'].append("Target with personalized discount offers")
+    
+    # Actionable insights
+    if prediction.billing_issues_reported > 0:
+        report['actionable_insights'].append("Resolve billing issues immediately")
+    
+    if prediction.data_usage_gb < 1 and prediction.internet_service != 'None':
+        report['actionable_insights'].append("Offer data usage guidance or packages")
+    
+    return report
+
 @app.route('/predict', methods=['GET', 'POST'])
 @login_required
 def predict():
     form = PredictionForm()
+    result = None
+    prediction_id = None
+    report = None
+    
     if form.validate_on_submit():
         try:
+            # Prepare input data
             input_data = {
                 'TelecomCompany': form.telecom_company.data,
                 'Region': form.region.data,
@@ -256,12 +367,15 @@ def predict():
                 'BillingIssuesReported': form.billing_issues_reported.data
             }
             
+            # Convert to DataFrame and preprocess
             input_df = pd.DataFrame([input_data])
             processed_data = preprocess_data(input_df)
             
+            # Make prediction
             prediction = model.predict(processed_data)[0]
             probability = model.predict_proba(processed_data)[0][1]
             
+            # Save prediction to database
             new_prediction = Prediction(
                 user_id=current_user.id,
                 telecom_company=form.telecom_company.data,
@@ -282,26 +396,47 @@ def predict():
                 discount_offer_used=form.discount_offer_used.data,
                 billing_issues_reported=form.billing_issues_reported.data,
                 prediction='Yes' if prediction == 1 else 'No',
-                probability=probability
+                probability=probability,
+                report_generated=True
             )
             
             db.session.add(new_prediction)
             db.session.commit()
             
+            # Generate report
+            report = generate_churn_report(new_prediction)
+            
+            # Prepare result
             result = {
                 'prediction': 'Yes' if prediction == 1 else 'No',
                 'probability': f"{probability * 100:.2f}%",
-                'recommendation': 'High risk of churn. Consider retention strategies.' if prediction == 1 else 'Low risk of churn.'
+                'recommendation': 'High risk of churn. Consider retention strategies.' if prediction == 1 else 'Low risk of churn.',
+                'report': report
             }
             
-            return render_template('predict.html', form=form, result=result, prediction_id=new_prediction.id)
+            prediction_id = new_prediction.id
+            
+            if 'add_another' in request.form:
+                # Preserve some fields for the next prediction
+                new_form = PredictionForm(
+                    telecom_company=form.telecom_company.data,
+                    region=form.region.data,
+                    gender=form.gender.data,
+                    contract_type=form.contract_type.data,
+                    contract_duration=form.contract_duration.data,
+                    payment_method=form.payment_method.data,
+                    internet_service=form.internet_service.data,
+                    additional_services=form.additional_services.data,
+                    discount_offer_used=form.discount_offer_used.data
+                )
+                return render_template('predict.html', form=new_form, result=result, prediction_id=prediction_id, report=report)
             
         except Exception as e:
             db.session.rollback()
-            flash('Prediction failed. Please try again.', 'danger')
             app.logger.error(f"Prediction error: {str(e)}")
+            flash(f'Prediction failed: {str(e)}', 'danger')
     
-    return render_template('predict.html', form=form)
+    return render_template('predict.html', form=form, result=result, prediction_id=prediction_id, report=report)
 
 @app.route('/predictions')
 @login_required
@@ -382,58 +517,138 @@ def export_predictions(format):
         app.logger.error(f"Export error: {str(e)}")
         return redirect(url_for('predictions'))
 
+def generate_pdf_report(prediction, report):
+    """Generate a detailed PDF report"""
+    buffer = io.BytesIO()
+    p = canvas.Canvas(buffer, pagesize=letter)
+    
+    # Header
+    p.setFont("Helvetica-Bold", 16)
+    p.drawString(100, 750, "Tanzania Telecom Churn Prediction Report")
+    p.setFont("Helvetica", 12)
+    p.drawString(100, 730, f"Report Generated: {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')}")
+    p.drawString(100, 710, f"Prediction ID: {prediction.id}")
+    
+    # Customer Details
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(100, 680, "Customer Details:")
+    p.setFont("Helvetica", 12)
+    
+    details = [
+        f"Telecom Company: {prediction.telecom_company}",
+        f"Region: {prediction.region}",
+        f"Age: {prediction.age}",
+        f"Gender: {prediction.gender}",
+        f"Contract Type: {prediction.contract_type}",
+        f"Contract Duration: {prediction.contract_duration}",
+        f"Tenure (Months): {prediction.tenure_months}",
+        f"Monthly Charges: {prediction.monthly_charges}",
+        f"Data Usage (GB): {prediction.data_usage_gb}",
+        f"Call Duration (Minutes): {prediction.call_duration_minutes}",
+        f"Complaints Filed: {prediction.complaints_filed}",
+        f"Customer Support Calls: {prediction.customer_support_calls}",
+        f"Payment Method: {prediction.payment_method}",
+        f"Internet Service: {prediction.internet_service}",
+        f"Additional Services: {prediction.additional_services}",
+        f"Discount Offer Used: {prediction.discount_offer_used}",
+        f"Billing Issues Reported: {prediction.billing_issues_reported}"
+    ]
+    
+    y_position = 660
+    for detail in details:
+        p.drawString(120, y_position, detail)
+        y_position -= 20
+    
+    # Prediction Results
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(100, y_position - 20, "Prediction Results:")
+    p.setFont("Helvetica", 12)
+    p.drawString(120, y_position - 40, f"Churn Prediction: {prediction.prediction}")
+    p.drawString(120, y_position - 60, f"Probability: {prediction.probability * 100:.2f}%")
+    
+    # Risk Analysis
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(100, y_position - 100, "Risk Analysis:")
+    p.setFont("Helvetica", 12)
+    
+    if report['risk_factors']:
+        p.drawString(120, y_position - 120, "Key Risk Factors:")
+        y_position -= 140
+        for factor in report['risk_factors']:
+            p.drawString(140, y_position, f"- {factor}")
+            y_position -= 20
+    else:
+        p.drawString(120, y_position - 120, "No significant risk factors identified")
+        y_position -= 140
+    
+    # Recommendations
+    p.setFont("Helvetica-Bold", 14)
+    p.drawString(100, y_position - 20, "Recommendations:")
+    p.setFont("Helvetica", 12)
+    
+    if prediction.prediction == 'Yes':
+        recommendations = [
+            "Immediate retention actions recommended:",
+            "- Offer personalized discounts or promotions",
+            "- Assign dedicated account manager",
+            "- Resolve any outstanding complaints",
+            "- Provide value-added services trial",
+            "- Conduct satisfaction survey"
+        ]
+    else:
+        recommendations = [
+            "Maintenance actions recommended:",
+            "- Continue current service quality",
+            "- Monitor for early warning signs",
+            "- Offer loyalty rewards",
+            "- Proactive customer check-ins"
+        ]
+    
+    for rec in recommendations:
+        p.drawString(120, y_position - 40, rec)
+        y_position -= 20
+    
+    # Retention Opportunities
+    if report['retention_opportunities']:
+        p.setFont("Helvetica-Bold", 14)
+        p.drawString(100, y_position - 40, "Retention Opportunities:")
+        p.setFont("Helvetica", 12)
+        y_position -= 60
+        for opp in report['retention_opportunities']:
+            p.drawString(120, y_position, f"- {opp}")
+            y_position -= 20
+    
+    # Actionable Insights
+    if report['actionable_insights']:
+        p.setFont("Helvetica-Bold", 14)
+        p.drawString(100, y_position - 20, "Actionable Insights:")
+        p.setFont("Helvetica", 12)
+        y_position -= 40
+        for insight in report['actionable_insights']:
+            p.drawString(120, y_position, f"- {insight}")
+            y_position -= 20
+    
+    p.showPage()
+    p.save()
+    buffer.seek(0)
+    return buffer
+
 @app.route('/download_pdf/<int:prediction_id>')
 @login_required
 def download_pdf(prediction_id):
     prediction = Prediction.query.get_or_404(prediction_id)
+    if prediction.user_id != current_user.id:
+        flash('Unauthorized access', 'danger')
+        return redirect(url_for('predictions'))
     
-    buffer = io.BytesIO()
-    p = canvas.Canvas(buffer, pagesize=letter)
+    report = generate_churn_report(prediction)
+    pdf_buffer = generate_pdf_report(prediction, report)
     
-    p.drawString(100, 750, "Tanzania Telecom Churn Prediction Report")
-    p.drawString(100, 730, f"Prediction ID: {prediction.id}")
-    p.drawString(100, 710, f"Date: {prediction.timestamp.strftime('%Y-%m-%d %H:%M:%S')}")
-    p.drawString(100, 690, "Customer Details:")
-    p.drawString(120, 670, f"Telecom Company: {prediction.telecom_company}")
-    p.drawString(120, 650, f"Region: {prediction.region}")
-    p.drawString(120, 630, f"Age: {prediction.age}")
-    p.drawString(120, 610, f"Gender: {prediction.gender}")
-    p.drawString(120, 590, f"Contract Type: {prediction.contract_type}")
-    p.drawString(120, 570, f"Contract Duration: {prediction.contract_duration}")
-    p.drawString(120, 550, f"Tenure (Months): {prediction.tenure_months}")
-    p.drawString(120, 530, f"Monthly Charges: {prediction.monthly_charges}")
-    p.drawString(120, 510, f"Data Usage (GB): {prediction.data_usage_gb}")
-    p.drawString(120, 490, f"Call Duration (Minutes): {prediction.call_duration_minutes}")
-    p.drawString(120, 470, f"Complaints Filed: {prediction.complaints_filed}")
-    p.drawString(120, 450, f"Customer Support Calls: {prediction.customer_support_calls}")
-    p.drawString(120, 430, f"Payment Method: {prediction.payment_method}")
-    p.drawString(120, 410, f"Internet Service: {prediction.internet_service}")
-    p.drawString(120, 390, f"Additional Services: {prediction.additional_services}")
-    p.drawString(120, 370, f"Discount Offer Used: {prediction.discount_offer_used}")
-    p.drawString(120, 350, f"Billing Issues Reported: {prediction.billing_issues_reported}")
-    p.drawString(100, 330, "Prediction Results:")
-    p.drawString(120, 310, f"Churn Prediction: {prediction.prediction}")
-    p.drawString(120, 290, f"Probability: {prediction.probability * 100:.2f}%")
-    p.drawString(100, 270, "Recommendation:")
-    
-    if prediction.prediction == 'Yes':
-        p.drawString(120, 250, "High risk of churn. Consider retention strategies:")
-        p.drawString(140, 230, "- Offer personalized discounts or promotions")
-        p.drawString(140, 210, "- Improve customer service interactions")
-        p.drawString(140, 190, "- Address billing issues promptly")
-        p.drawString(140, 170, "- Provide value-added services")
-    else:
-        p.drawString(120, 250, "Low risk of churn. Maintain current service quality.")
-    
-    p.showPage()
-    p.save()
-    
-    buffer.seek(0)
     return send_file(
-        buffer,
+        pdf_buffer,
         mimetype='application/pdf',
         as_attachment=True,
-        download_name=f'churn_prediction_{prediction.id}.pdf'
+        download_name=f'churn_report_{prediction.id}.pdf'
     )
 
 @app.route('/api/predict', methods=['POST'])
@@ -469,18 +684,19 @@ def api_predict():
         return jsonify({'error': str(e), 'status': 'error'}), 500
 
 if __name__ == '__main__':
+    # Initialize database before running the app
     with app.app_context():
-        try:
-            db.create_all()
-            print("Database tables created successfully")
-        except Exception as e:
-            print(f"Error creating database: {str(e)}")
-            try:
-                open(os.path.join(db_dir, 'app.db'), 'w').close()
-                db.create_all()
-                print("Database created after manual intervention")
-            except Exception as e2:
-                print(f"Failed to create database: {str(e2)}")
-                raise
+        db.create_all()
+        
+        # Create admin user if not exists
+        if not User.query.filter_by(username='admin').first():
+            admin = User(
+                username='admin',
+                email='admin@example.com',
+                password_hash=generate_password_hash('admin123'),
+                is_admin=True
+            )
+            db.session.add(admin)
+            db.session.commit()
     
     app.run(debug=True)

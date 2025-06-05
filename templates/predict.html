@@ -1,186 +1,308 @@
 {% extends "base.html" %}
 
-{% block title %}Predict Churn{% endblock %}
+{% block title %}Churn Prediction{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-8">
-        <div class="card mb-4">
-            <div class="card-header bg-primary text-white">
-                <h4>Customer Churn Prediction</h4>
-            </div>
-            <div class="card-body">
-                <form method="POST" action="{{ url_for('predict') }}">
-                    {{ form.hidden_tag() }}
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="telecom_company" class="form-label">Telecom Company</label>
-                                {{ form.telecom_company(class="form-control") }}
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="region" class="form-label">Region</label>
-                                {{ form.region(class="form-control") }}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="age" class="form-label">Age</label>
-                                {{ form.age(class="form-control") }}
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="gender" class="form-label">Gender</label>
-                                {{ form.gender(class="form-control") }}
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="contract_type" class="form-label">Contract Type</label>
-                                {{ form.contract_type(class="form-control") }}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="contract_duration" class="form-label">Contract Duration</label>
-                                {{ form.contract_duration(class="form-control") }}
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <div class="form-group">
-                                <label for="tenure_months" class="form-label">Tenure (Months)</label>
-                                {{ form.tenure_months(class="form-control") }}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="monthly_charges" class="form-label">Monthly Charges</label>
-                                {{ form.monthly_charges(class="form-control") }}
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="data_usage_gb" class="form-label">Data Usage (GB)</label>
-                                {{ form.data_usage_gb(class="form-control") }}
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="call_duration_minutes" class="form-label">Call Duration (Minutes)</label>
-                                {{ form.call_duration_minutes(class="form-control") }}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="complaints_filed" class="form-label">Complaints Filed</label>
-                                {{ form.complaints_filed(class="form-control") }}
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="customer_support_calls" class="form-label">Customer Support Calls</label>
-                                {{ form.customer_support_calls(class="form-control") }}
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="billing_issues_reported" class="form-label">Billing Issues Reported</label>
-                                {{ form.billing_issues_reported(class="form-control") }}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="row mb-3">
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="payment_method" class="form-label">Payment Method</label>
-                                {{ form.payment_method(class="form-control") }}
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="internet_service" class="form-label">Internet Service</label>
-                                {{ form.internet_service(class="form-control") }}
-                            </div>
-                        </div>
-                        <div class="col-md-4">
-                            <div class="form-group">
-                                <label for="additional_services" class="form-label">Additional Services</label>
-                                {{ form.additional_services(class="form-control") }}
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mb-3">
-                        <div class="form-group">
-                            <label for="discount_offer_used" class="form-label">Discount Offer Used</label>
-                            {{ form.discount_offer_used(class="form-control") }}
-                        </div>
-                    </div>
-                    
-                    <button type="submit" class="btn btn-primary">Predict Churn</button>
-                </form>
-            </div>
-        </div>
-    </div>
+<div class="container mt-4">
+    <h2 class="mb-4">Customer Churn Prediction</h2>
     
-    <div class="col-md-4">
-        {% if result %}
-        <div class="card mb-4">
-            <div class="card-header bg-success text-white">
-                <h4>Prediction Result</h4>
-            </div>
-            <div class="card-body">
-                <div class="alert alert-{{ 'danger' if result.prediction == 'Yes' else 'success' }}" role="alert">
-                    <h5 class="alert-heading">
-                        {% if result.prediction == 'Yes' %}
-                        High Risk of Churn
-                        {% else %}
-                        Low Risk of Churn
-                        {% endif %}
-                    </h5>
-                    <p>Prediction: <strong>{{ result.prediction }}</strong></p>
-                    <p>Probability: <strong>{{ result.probability }}</strong></p>
-                    <hr>
-                    <p class="mb-0">{{ result.recommendation }}</p>
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
-                <a href="{{ url_for('download_pdf', prediction_id=prediction_id) }}" class="btn btn-outline-primary">
-                    Download as PDF
-                </a>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Enter Customer Details</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" action="{{ url_for('predict') }}">
+                        {{ form.hidden_tag() }}
+                        
+                        <div class="row g-3">
+                            <!-- Personal Information -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.telecom_company.label(class="form-label") }}
+                                    {{ form.telecom_company(class="form-select") }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.region.label(class="form-label") }}
+                                    {{ form.region(class="form-select") }}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.age.label(class="form-label") }}
+                                    {{ form.age(class="form-control", placeholder="e.g. 35") }}
+                                    {% for error in form.age.errors %}
+                                        <div class="invalid-feedback d-block">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="mb-3">
+                                    {{ form.gender.label(class="form-label") }}
+                                    {{ form.gender(class="form-select") }}
+                                </div>
+                            </div>
+                            
+                            <!-- Contract Details -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.contract_type.label(class="form-label") }}
+                                    {{ form.contract_type(class="form-select") }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.contract_duration.label(class="form-label") }}
+                                    {{ form.contract_duration(class="form-select") }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.tenure_months.label(class="form-label") }}
+                                    {{ form.tenure_months(class="form-control", placeholder="e.g. 12") }}
+                                    {% for error in form.tenure_months.errors %}
+                                        <div class="invalid-feedback d-block">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.monthly_charges.label(class="form-label") }}
+                                    <div class="input-group">
+                                        <span class="input-group-text">TZS</span>
+                                        {{ form.monthly_charges(class="form-control", placeholder="e.g. 50000") }}
+                                    </div>
+                                    {% for error in form.monthly_charges.errors %}
+                                        <div class="invalid-feedback d-block">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            
+                            <!-- Usage Information -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.data_usage_gb.label(class="form-label") }}
+                                    <div class="input-group">
+                                        {{ form.data_usage_gb(class="form-control", placeholder="e.g. 10.5") }}
+                                        <span class="input-group-text">GB</span>
+                                    </div>
+                                    {% for error in form.data_usage_gb.errors %}
+                                        <div class="invalid-feedback d-block">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.call_duration_minutes.label(class="form-label") }}
+                                    <div class="input-group">
+                                        {{ form.call_duration_minutes(class="form-control", placeholder="e.g. 300") }}
+                                        <span class="input-group-text">mins</span>
+                                    </div>
+                                    {% for error in form.call_duration_minutes.errors %}
+                                        <div class="invalid-feedback d-block">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            
+                            <!-- Customer Support -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.complaints_filed.label(class="form-label") }}
+                                    {{ form.complaints_filed(class="form-control", placeholder="e.g. 2") }}
+                                    {% for error in form.complaints_filed.errors %}
+                                        <div class="invalid-feedback d-block">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.customer_support_calls.label(class="form-label") }}
+                                    {{ form.customer_support_calls(class="form-control", placeholder="e.g. 3") }}
+                                    {% for error in form.customer_support_calls.errors %}
+                                        <div class="invalid-feedback d-block">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                            
+                            <!-- Payment and Services -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.payment_method.label(class="form-label") }}
+                                    {{ form.payment_method(class="form-select") }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.internet_service.label(class="form-label") }}
+                                    {{ form.internet_service(class="form-select") }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.additional_services.label(class="form-label") }}
+                                    {{ form.additional_services(class="form-select") }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.discount_offer_used.label(class="form-label") }}
+                                    {{ form.discount_offer_used(class="form-select") }}
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    {{ form.billing_issues_reported.label(class="form-label") }}
+                                    {{ form.billing_issues_reported(class="form-control", placeholder="e.g. 1") }}
+                                    {% for error in form.billing_issues_reported.errors %}
+                                        <div class="invalid-feedback d-block">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <button type="submit" name="predict" class="btn btn-primary me-md-2">
+                                <i class="bi bi-calculator"></i> Predict Churn
+                            </button>
+                            <button type="submit" name="add_another" class="btn btn-outline-primary">
+                                <i class="bi bi-plus-circle"></i> Predict & Add Another
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
-        {% endif %}
         
-        <div class="card">
-            <div class="card-header bg-info text-white">
-                <h4>Prediction Tips</h4>
-            </div>
-            <div class="card-body">
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item">Customers with longer tenure are less likely to churn</li>
-                    <li class="list-group-item">Higher monthly charges correlate with increased churn risk</li>
-                    <li class="list-group-item">Postpaid customers tend to churn less than prepaid</li>
-                    <li class="list-group-item">Frequent customer service calls indicate higher churn risk</li>
-                    <li class="list-group-item">Customers using additional services churn less often</li>
-                </ul>
-            </div>
+        <!-- Results Column -->
+        <div class="col-md-4">
+            {% if result %}
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header {% if result.prediction == 'Yes' %}bg-danger{% else %}bg-success{% endif %} text-white">
+                        <h5 class="mb-0">Prediction Result</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="text-center mb-3">
+                            <div class="prediction-badge {% if result.prediction == 'Yes' %}bg-danger{% else %}bg-success{% endif %}">
+                                {{ result.prediction }}
+                            </div>
+                            <h4 class="mt-2">{{ result.probability }} Probability</h4>
+                        </div>
+                        
+                        <p class="alert {% if result.prediction == 'Yes' %}alert-danger{% else %}alert-success{% endif %}">
+                            <strong>{{ result.recommendation }}</strong>
+                        </p>
+                        
+                        {% if prediction_id %}
+                            <div class="d-grid gap-2">
+                                <a href="{{ url_for('download_pdf', prediction_id=prediction_id) }}" class="btn btn-outline-primary">
+                                    <i class="bi bi-download"></i> Download Report (PDF)
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Churn Report -->
+                {% if report %}
+                    <div class="card shadow-sm">
+                        <div class="card-header bg-info text-white">
+                            <h5 class="mb-0">Churn Analysis Report</h5>
+                        </div>
+                        <div class="card-body">
+                            <!-- Risk Factors -->
+                            {% if report.risk_factors %}
+                                <div class="mb-3">
+                                    <h6><i class="bi bi-exclamation-triangle-fill text-danger"></i> Risk Factors</h6>
+                                    <ul class="list-group list-group-flush">
+                                        {% for factor in report.risk_factors %}
+                                            <li class="list-group-item">{{ factor }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Retention Opportunities -->
+                            {% if report.retention_opportunities %}
+                                <div class="mb-3">
+                                    <h6><i class="bi bi-lightbulb-fill text-warning"></i> Retention Opportunities</h6>
+                                    <ul class="list-group list-group-flush">
+                                        {% for opp in report.retention_opportunities %}
+                                            <li class="list-group-item">{{ opp }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                            
+                            <!-- Actionable Insights -->
+                            {% if report.actionable_insights %}
+                                <div class="mb-3">
+                                    <h6><i class="bi bi-check-circle-fill text-success"></i> Actionable Insights</h6>
+                                    <ul class="list-group list-group-flush">
+                                        {% for insight in report.actionable_insights %}
+                                            <li class="list-group-item">{{ insight }}</li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="card shadow-sm">
+                    <div class="card-header bg-secondary text-white">
+                        <h5 class="mb-0">Prediction Instructions</h5>
+                    </div>
+                    <div class="card-body">
+                        <p>Fill out all customer details on the left and click "Predict Churn" to see the results here.</p>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> All fields are required for an accurate prediction.
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>
+
+<style>
+    .prediction-badge {
+        display: inline-block;
+        padding: 0.5em 1em;
+        font-size: 1.5rem;
+        font-weight: bold;
+        border-radius: 50%;
+        width: 80px;
+        height: 80px;
+        line-height: 80px;
+        text-align: center;
+        color: white;
+    }
+    
+    .card {
+        border-radius: 10px;
+    }
+    
+    .card-header {
+        border-radius: 10px 10px 0 0 !important;
+    }
+    
+    .form-control, .form-select {
+        border-radius: 5px;
+    }
+</style>
 {% endblock %}
